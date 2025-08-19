@@ -3,6 +3,9 @@ env/
 venv/
 .venv/
 
+# Python cache
+__pycache__/
+
 # Pytest
 .pytest_cache/
 
