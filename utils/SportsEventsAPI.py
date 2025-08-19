@@ -9,7 +9,7 @@ class SportsEventsAPI:
         pass
 
     def get_events(self) -> pd.DataFrame:
-        """Psuedo function to retrieve data from API. Actually reads psuedo data from csv.
+        """Psuedo function to retrieve data from API. Actually reads data from csv.
 
         Returns:
             pd.DataFrame: Data from API.
