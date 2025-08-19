@@ -4,7 +4,7 @@ import pandas as pd
 class SportsEventsAPI:
     """Placeholder class to fetch data from 'Sports Events API'"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initiate class"""
         pass
 
