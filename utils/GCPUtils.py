@@ -1,6 +1,6 @@
 import logging
 import os
-from io import BytesIO
+from io import BytesIO, StringIO
 
 import pandas as pd
 import pandas_gbq
@@ -83,6 +83,22 @@ class GCSClient:
         df = pd.DataFrame(BytesIO(blob_as_bytes))
         logging.info("Blob converted to dataframe")
         return df
+
+    def df_to_gcs_blob(
+        self, df: pd.DataFrame, bucket_name: str, blob_name: str
+    ) -> None:
+        """Upload dataframe to bucket as a csv
+
+        Args:
+            df (pd.DataFrame): dataframe to upload
+            bucket_name (str): bucket to upload to
+            blob_name (str): blob name to save as
+        """
+        buffer = StringIO()
+        df.to_csv(buffer, index=False)
+        bucket = self.client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        blob.upload_from_string(buffer.getvalue(), content_type="text/csv")
 
     def delete_blob_from_gcs(self, bucket_name: str, blob_name: str) -> None:
         """Delete blob from gcs bucket
