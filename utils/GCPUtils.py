@@ -1,16 +1,35 @@
+import logging
+import os
+from io import BytesIO
+
 import pandas as pd
-from google.cloud import bigquery
+import pandas_gbq
+from dotenv import load_dotenv
+from google.cloud import bigquery, storage
 
 
 class BigQueryClient:
     """Retrieve and write data to BigQuery"""
 
-    def __init__(self, project_id: str) -> None:
-        self.project_id = project_id
-        self.client = bigquery.Client(project=project_id)
+    def __init__(self, dotenvpath: str) -> None:
+        logging.info("Loading google credentials")
+        load_dotenv(dotenvpath)
+        google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if not google_credentials or not os.path.exists(google_credentials):
+            raise ValueError("Google credentials file not found")
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials
+        self.project_id = os.getenv("PROJECT_ID")
+        if not self.project_id:
+            raise ValueError("Project ID not found")
+        self.client = bigquery.Client(project=self.project_id)
+        logging.info("BigQuery client created successfully.")
 
     def upload_dataframe_to_bigquery(
-        self, df: pd.DataFrame, dataset_id: str, table_id: str, replace: bool
+        self,
+        df: pd.DataFrame,
+        dataset_id: str,
+        table_id: str,
+        replace: bool,
     ) -> None:
         """Takes dataframe into BigQuery
 
@@ -26,9 +45,53 @@ class BigQueryClient:
         else:
             if_exists = "append"
         table_ref = f"{self.project_id}.{dataset_id}.{table_id}"
-        df.to_gbq(
+        pandas_gbq.to_gbq(
+            dataframe=df,
             destination_table=table_ref,
-            project_id=self.project_id,
             if_exists=if_exists,
-            location="EU",
+            location="europe-west2",
         )
+
+
+class GCSClient:
+    """Retrieve, write, and delete files from bucket"""
+
+    def __init__(self, dotenvpath: str) -> None:
+        logging.info("Loading google credentials")
+        load_dotenv(dotenvpath)
+        google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if not google_credentials or not os.path.exists(google_credentials):
+            raise ValueError("Google credentials file not found")
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials
+        self.client = storage.Client()
+        logging.info("Storage client created successfully.")
+
+    def gcs_blob_to_df(self, bucket_name: str, blob_name: str) -> pd.DataFrame:
+        """Download blob to bytes, load into dataframe and return
+
+        Args:
+            bucket (str): bucket to download from
+            blob (str): blob name to download
+
+        Returns:
+            pd.DataFrame: blob in dataframe format
+        """
+        bucket = self.client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        logging.info("Downloading blob: %s.%s", bucket_name, blob_name)
+        blob_as_bytes = blob.download_as_bytes()
+        df = pd.DataFrame(BytesIO(blob_as_bytes))
+        logging.info("Blob converted to dataframe")
+        return df
+
+    def delete_blob_from_gcs(self, bucket_name: str, blob_name: str) -> None:
+        """Delete blob from gcs bucket
+
+        Args:
+            bucket_name (str): name of bucket blob is in
+            blob_name (str): blob to delete
+        """
+        bucket = self.client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        blob.delete()
+        logging.info("%s.%s deleted", bucket_name, blob_name)

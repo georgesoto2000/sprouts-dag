@@ -14,5 +14,5 @@ class SportsEventsAPI:
         Returns:
             pd.DataFrame: Data from API.
         """
-        events = pd.read_csv("../data/sports_events.csv")
+        events = pd.read_csv("./data/api_results.csv")
         return events
