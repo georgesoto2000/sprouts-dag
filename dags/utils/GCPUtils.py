@@ -12,16 +12,8 @@ from google.cloud import bigquery, storage
 class BigQueryClient:
     """Retrieve and write data to BigQuery"""
 
-    def __init__(self, dotenvpath: str) -> None:
-        logging.info("Loading google credentials")
-        load_dotenv(dotenvpath)
-        google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        if not google_credentials or not os.path.exists(google_credentials):
-            raise ValueError("Google credentials file not found")
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials
-        self.project_id = os.getenv("PROJECT_ID")
-        if not self.project_id:
-            raise ValueError("Project ID not found")
+    def __init__(self, project_id: str) -> None:
+        self.project_id = project_id
         self.client = bigquery.Client(project=self.project_id)
         logging.info("BigQuery client created successfully.")
 
@@ -67,14 +59,9 @@ class BigQueryClient:
 class GCSClient:
     """Retrieve, write, and delete files from bucket"""
 
-    def __init__(self, dotenvpath: str) -> None:
-        logging.info("Loading google credentials")
-        load_dotenv(dotenvpath)
-        google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        if not google_credentials or not os.path.exists(google_credentials):
-            raise ValueError("Google credentials file not found")
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials
-        self.client = storage.Client()
+    def __init__(self, project_id: str) -> None:
+        self.project_id = project_id
+        self.client = storage.Client(project=self.project_id)
         logging.info("Storage client created successfully.")
 
     def get_blob_names(self, bucket_name: str, pattern: str | None = None) -> list[str]:

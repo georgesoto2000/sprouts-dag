@@ -18,10 +18,18 @@ if __name__ == "__main__":
     bucket_name = os.getenv("BUCKET_NAME")
     archive_bucket_name = os.getenv("ARCHIVE_BUCKET_NAME")
 
+    google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if not google_credentials or not os.path.exists(google_credentials):
+        raise ValueError("Google credentials file not found")
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials
+    project_id = os.getenv("PROJECT_ID")
+    if not project_id:
+        raise ValueError("Project ID not found")
+
     api = SportsEventsAPI()
     events = api.get_events()
 
-    bq_client = BigQueryClient(dotenvpath="./env/.env")
+    bq_client = BigQueryClient(project_id=project_id)
     bq_client.upload_dataframe_to_bigquery(
         df=events,
         dataset_id="sports_events",
@@ -29,7 +37,7 @@ if __name__ == "__main__":
         replace=True,
     )
 
-    gcs_client = GCSClient(dotenvpath="./env/.env")
+    gcs_client = GCSClient(project_id=project_id)
     pattern = (
         r"^sales_\d{8}_\d{6}\.csv$"  # Assuming the format is sales_DDMMYYYY._HHMMSS.csv
     )
