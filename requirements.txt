@@ -4,3 +4,5 @@ google-cloud-bigquery
 google-cloud-storage
 apache-airflow
 dotenv
+graphviz
+apache-airflow-providers-fab

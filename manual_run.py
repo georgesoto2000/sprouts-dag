@@ -4,7 +4,6 @@ import pandas as pd
 
 from dotenv import load_dotenv
 
-from config import daily_sales_schema
 from dags.utils.GCPUtils import BigQueryClient, GCSClient
 from dags.utils.SportsEventsAPI import SportsEventsAPI
 
@@ -61,7 +60,14 @@ if __name__ == "__main__":
             dataset_id=dataset_id,
             table_id=table_id,
             replace=False,
-            table_schema=daily_sales_schema,
+            table_schema=[
+                {"name": "Date", "type": "DATE"},
+                {"name": "Order_id", "type": "STRING"},
+                {"name": "transaction_ID", "type": "STRING"},
+                {"name": "product", "type": "STRING"},
+                {"name": "customer_id", "type": "STRING"},
+                {"name": "cost", "type": "FLOAT64"},
+            ],
         )
         gcs_client.delete_blob_from_gcs(bucket_name=bucket_name, blob_name=blob_name)
         gcs_client.df_to_gcs_blob(
