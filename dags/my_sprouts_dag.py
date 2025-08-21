@@ -1,3 +1,5 @@
+"""Dag to upload sports events to BigQuery, move sales data to archive bucket, upload it ton BQ, and trigger a dbt pipeline."""
+
 import logging
 from datetime import datetime
 
@@ -15,7 +17,16 @@ def download_blob_move_to_archive(
     archive_bucket_name: str,
     blob_name: str,
 ) -> None:
-    """Download blob from GCS bucket, upload to BigQuery, and move blob to archive bucket."""
+    """Download blob from GCS bucket, upload to BigQuery, and move blob to archive bucket.
+
+    Args:
+        project_id (str): GCP project
+        dataset_id (str): BQ dataset
+        table_id (str): BQ table
+        bucket_name (str): bucket to get blob from
+        archive_bucket_name (str): archive bucket to move blob to
+        blob_name (str): name of blob to look for in bucket
+    """
 
     gcs_client = GCSClient(project_id=project_id)
     bq_client = BigQueryClient(project_id=project_id)
@@ -70,7 +81,13 @@ def my_sprouts_dag():
     def retrieve_events_upload_bq(
         project_id: str, dataset_id: str, table_id: str
     ) -> None:
-        """Retrieve data from Sports Events API and upload to BigQuery."""
+        """Retrieve data from Sports Events API and upload to BigQuery.
+
+        Args:
+            project_id (str): GCP Project
+            dataset_id (str): BQ dataset
+            table_id (str): BQ table
+        """
         api = SportsEventsAPI()
         events = api.get_events()
 
@@ -117,7 +134,6 @@ def my_sprouts_dag():
     dataset_id = "ecommerce_sales"
     table_id = "daily_sales"
 
-    # Tasks
     sports_events = retrieve_events_upload_bq(
         project_id=project_id, dataset_id="sports_events", table_id="events"
     )

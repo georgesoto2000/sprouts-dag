@@ -1,3 +1,5 @@
+"""Used to imitate fetching data from a Sports Events API"""
+
 import pandas as pd
 
 
