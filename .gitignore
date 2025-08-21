@@ -1,1 +1,26 @@
-data/*
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+
+# Pytest
+.pytest_cache/
+
+# IDEs and editors
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# GCP service account keys
+*.json
+
+# ignore data folder
+data/
+
+# Sanity checks
+sanity.py
