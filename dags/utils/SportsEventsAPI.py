@@ -10,7 +10,7 @@ class SportsEventsAPI:
         """Initiate class"""
         pass
 
-    def get_events(self) -> pd.DataFrame:
+    def get_events(self, **kwargs) -> pd.DataFrame:
         """Psuedo function to retrieve data from API. Actually reads data from csv.
 
         Returns:
