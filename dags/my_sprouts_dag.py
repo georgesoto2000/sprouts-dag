@@ -133,3 +133,6 @@ def my_sprouts_dag():
         blob_name=retrieve_blob_names,
     )
     return sports_events >> retrieve_blob_names >> parallel_archive
+
+
+dag = my_sprouts_dag()
