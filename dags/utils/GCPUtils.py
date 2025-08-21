@@ -1,11 +1,11 @@
+"""Contains  utils for interacting with GCP, including BigQuery and Google Cloud Storage"""
+
 import logging
-import os
+import re
 from io import BytesIO, StringIO
 
 import pandas as pd
-import re
 import pandas_gbq
-from dotenv import load_dotenv
 from google.cloud import bigquery, storage
 
 
