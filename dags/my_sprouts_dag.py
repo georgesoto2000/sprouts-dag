@@ -83,56 +83,57 @@ def my_sprouts_dag():
         )
 
     @task
-    def get_blob_names(
-        project_id: str, bucket_name: str, pattern: str | None = None
-    ) -> list[str]:
-        """Find the blob names matching a pattern in the bucket."""
-        gcs_client = GCSClient(project_id=project_id)
-        if pattern:
-            return gcs_client.get_blob_names(bucket_name=bucket_name, pattern=pattern)
-        return gcs_client.get_blob_names(bucket_name=bucket_name)
-
-    @task
-    def archive_blobs(
+    def upload_sales_data(
         project_id: str,
         dataset_id: str,
         table_id: str,
         bucket_name: str,
         archive_bucket_name: str,
-        blob_name: str,
-    ) -> None:
-        """Archive blobs and upload to BigQuery."""
-        download_blob_move_to_archive(
-            project_id=project_id,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            bucket_name=bucket_name,
-            archive_bucket_name=archive_bucket_name,
-            blob_name=blob_name,
-        )
+        pattern: str | None = None,
+    ) -> list[str]:
+        """Find the blob names matching a pattern in the bucket."""
+        gcs_client = GCSClient(project_id=project_id)
+        if pattern:
+            names = gcs_client.get_blob_names(bucket_name=bucket_name, pattern=pattern)
+        else:
+            names = gcs_client.get_blob_names(bucket_name=bucket_name)
+        for name in names:
+            download_blob_move_to_archive(
+                project_id=project_id,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                bucket_name=bucket_name,
+                archive_bucket_name=archive_bucket_name,
+                blob_name=name,
+            )
 
-    PROJECT_ID = "sprouts-469516"
-    BUCKET_NAME = "ecommerce-sales-sprout"
-    ARCHIVE_BUCKET_NAME = "ecommerce-sales-sprout-archive"
-    DATASET_ID = "ecommerce_sales"
-    TABLE_ID = "daily_sales"
+    @task
+    def trigger_dbt_pipleine():
+        pass
+
+    project_id = "sprouts-469516"
+    bucket_name = "ecommerce-sales-sprout"
+    archive_bucket_name = "ecommerce-sales-sprout-archive"
+    dataset_id = "ecommerce_sales"
+    table_id = "daily_sales"
 
     # Tasks
     sports_events = retrieve_events_upload_bq(
-        project_id=PROJECT_ID, dataset_id="sports_events", table_id="events"
+        project_id=project_id, dataset_id="sports_events", table_id="events"
     )
 
-    retrieve_blob_names = get_blob_names(project_id=PROJECT_ID, bucket_name=BUCKET_NAME)
-
-    parallel_archive = archive_blobs.expand(
-        project_id=[PROJECT_ID],
-        dataset_id=[DATASET_ID],
-        table_id=[TABLE_ID],
-        bucket_name=[BUCKET_NAME],
-        archive_bucket_name=[ARCHIVE_BUCKET_NAME],
-        blob_name=retrieve_blob_names,
+    sales_data_task = upload_sales_data(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        bucket_name=bucket_name,
+        archive_bucket_name=archive_bucket_name,
+        table_id=table_id,
+        pattern=r"^sales_\d{8}_\d{6}\.csv$",
     )
-    return sports_events >> retrieve_blob_names >> parallel_archive
+
+    dbt_task = trigger_dbt_pipleine()
+
+    return sports_events >> sales_data_task >> dbt_task
 
 
 dag = my_sprouts_dag()
