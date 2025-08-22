@@ -106,7 +106,7 @@ def my_sprouts_dag():
         bucket_name: str,
         archive_bucket_name: str,
         pattern: str | None = None,
-    ) -> list[str]:
+    ) -> None:
         """Find the blob names matching a pattern in the bucket."""
         gcs_client = GCSClient(project_id=project_id)
         if pattern:
@@ -126,7 +126,7 @@ def my_sprouts_dag():
             )
 
     @task
-    def trigger_dbt_pipleine():
+    def trigger_dbt_pipeline() -> None:
         pass
 
     project_id = "sprouts-469516"
@@ -148,7 +148,7 @@ def my_sprouts_dag():
         pattern=r"^sales_\d{8}_\d{6}\.csv$",
     )
 
-    dbt_task = trigger_dbt_pipleine()
+    dbt_task = trigger_dbt_pipeline()
 
     return sports_events >> sales_data_task >> dbt_task
 
