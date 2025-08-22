@@ -54,11 +54,10 @@ def download_blob_move_to_archive(
             {"name": "cost", "type": "FLOAT64"},
         ],
     )
-
-    gcs_client.delete_blob_from_gcs(bucket_name=bucket_name, blob_name=blob_name)
     gcs_client.df_to_gcs_blob(
         df=sales, bucket_name=archive_bucket_name, blob_name=blob_name
     )
+    gcs_client.delete_blob_from_gcs(bucket_name=bucket_name, blob_name=blob_name)
 
     logging.info(
         "%s blob uploaded to BigQuery %s.%s and moved from %s to archive bucket %s",
@@ -111,9 +110,11 @@ def my_sprouts_dag():
         """Find the blob names matching a pattern in the bucket."""
         gcs_client = GCSClient(project_id=project_id)
         if pattern:
-            names = gcs_client.get_blob_names(bucket_name=bucket_name, pattern=pattern)
+            names = set(
+                gcs_client.get_blob_names(bucket_name=bucket_name, pattern=pattern)
+            )
         else:
-            names = gcs_client.get_blob_names(bucket_name=bucket_name)
+            names = set(gcs_client.get_blob_names(bucket_name=bucket_name))
         for name in names:
             download_blob_move_to_archive(
                 project_id=project_id,
